@@ -1,0 +1,20 @@
+{
+  "name": "acfun-web-extension",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf ./dest && tsc && rollup -c",
+    "cat": "cat ./greasyfork.js ./dist/index.js > .dev/script.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/jquery": "^3.5.14",
+    "jquery": "^3.6.0"
+  },
+  "devDependencies": {
+    "rollup-plugin-commonjs": "^10.1.0"
+  }
+}
