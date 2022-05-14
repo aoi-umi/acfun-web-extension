@@ -1,7 +1,9 @@
 import { AcLiveExt } from "@/live";
+import { AcMainExt } from "@/index";
 
 declare global {
   interface Window {
-    acLikeExt: AcLiveExt
+    acLiveExt: AcLiveExt
+    acMainExt: AcMainExt
   }
 }

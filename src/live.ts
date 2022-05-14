@@ -5,36 +5,31 @@ let acceptBtnName = `${prefix}accept`;
 let cancelBtnName = `${prefix}cancel`;
 let timeInputName = `${prefix}time`;
 let dialogName = `${prefix}dialog`;
-let head = document.querySelector('head');
-let body = document.querySelector('body');
 let defaultTime = 100;
 let likeBtn = document.querySelector<HTMLButtonElement>('.like-heart');
 export class AcLiveExt {
-  dialog: HTMLDivElement
+  dialog: JQuery<HTMLElement>
   acLike: number
-  inited = false
   get acLikeExt() {
-    return window.acLikeExt
+    return window.acLiveExt
   }
   constructor() { }
-  
+
   static globalInit() {
-    let acLikeExt = window.acLikeExt;
-    if (!acLikeExt)
-      acLikeExt = window.acLikeExt = new AcLiveExt();
+    let acLikeExt = window.acLiveExt = new AcLiveExt();
     acLikeExt.init();
   }
-  
-  toggle(dom, show?) {
+
+  toggle(dom: JQuery<HTMLElement>, show?) {
     if (show === undefined)
-      show = !(dom.style.display !== 'none')
-    dom.style.display = !show ? 'none' : ''
+      dom.toggle();
+    else
+      show ? dom.show() : dom.hide();
   }
 
   // 样式
   initStyle() {
-    let style = document.createElement('style');
-    style.innerHTML = `
+    $('style').append(`
       .${prefix}menu {
         background: white;
         position: fixed; top: 100px; right: 10px;
@@ -95,65 +90,44 @@ export class AcLiveExt {
         background: #fd4c5d;
         color: #fff;
       }
-    `;
-    head.appendChild(style);
+    `);
   }
 
   initView() {
-    this.addMenu();
     this.addDialog();
   };
 
-  addMenu() {
-    let dom: any = document.createElement('div');
-    dom.classList = [
-      `${prefix}menu`
-    ];
-    dom.innerHTML = `
-    <svg width="20" viewBox="0 0 70 60">
-      <path d="M0 10 L10 10 L10 0 L30 0 L30 10 L40 10 L40 0 L60 0 L60 10 L70 10 L70 30 L60 30 L60 40 L50 40 L50 50 L40 50 L40 60 L30 60 L30 50 L20 50 L20 40 L10 40 L10 30 L0 30 Z" fill="red" fill-rule="evenodd" />
-    </svg>
-    `;
-    dom.addEventListener('click', () => {
-      this.acLikeExt.run()
-    })
-    body.appendChild(dom)
-  }
-
   addDialog() {
-    let dialogHtml = `
-      <div class="${prefix}dialog">
-        <div>时间(毫秒/次, 大于等于100的数)</div>
-        <div>
-          <input class="${prefix}input" id="${timeInputName}" value=${defaultTime} autocomplete="off"  type="text" /> 
+    let dialog = $(`
+      <div id="${dialogName}" class="${prefix}dialog-box">
+        <div  class="${prefix}dialog">
+          <div>时间(毫秒/次, 大于等于100的数)</div>
+          <div>
+            <input class="${prefix}input" id="${timeInputName}" value=${defaultTime} autocomplete="off"  type="text" /> 
+          </div>
+          <div>
+            <button id="${cancelBtnName}" type="button" class="${prefix}btn">取消</button>
+            <button id="${acceptBtnName}" type="button" class="${prefix}btn ${prefix}btn-primary" >确定</button>
+          </div>
         </div>
-        <div>
-          <button id="${cancelBtnName}" type="button" class="${prefix}btn">取消</button>
-          <button id="${acceptBtnName}" type="button" class="${prefix}btn ${prefix}btn-primary" >确定</button>
-        </div>
-      </div>`;
-    let dialog: any = this.dialog = document.createElement("div");
-    dialog.id = dialogName
-    dialog.classList = [
-      `${prefix}dialog-box`
-    ];
-    dialog.innerHTML = dialogHtml;
+      </div>`);
+
     this.toggle(dialog, false);
-    let acceptBtn = dialog.querySelector(`#${acceptBtnName}`)
-    acceptBtn.addEventListener('click', () => {
+    let acceptBtn = dialog.find(`#${acceptBtnName}`)
+    acceptBtn.on('click', () => {
       this.acceptClick();
     });
-    let cancelBtn = dialog.querySelector(`#${cancelBtnName}`)
-    cancelBtn.addEventListener('click', () => {
+    let cancelBtn = dialog.find(`#${cancelBtnName}`)
+    cancelBtn.on('click', () => {
       this.toggle(dialog);
     });
-    body.appendChild(dialog);
+    $('body').append(dialog);
     this.acLikeExt.dialog = dialog
   }
 
   acceptClick() {
     let dialog = this.acLikeExt.dialog;
-    let time: any = dialog.querySelector<HTMLInputElement>(`#${timeInputName}`).value;
+    let time: any = dialog.find(`#${timeInputName}`).attr('value');
     time = new Number(time);
     if (isNaN(time) || time < 100) {
       return alert('请输入正确的时间')
@@ -172,16 +146,15 @@ export class AcLiveExt {
     } else {
       console.log('开始点赞')
       this.acLikeExt.acLike = setInterval(function () {
+        if (window.acMainExt.shouldPause) return
         likeBtn.click();
       }, time);
     }
   }
 
   init() {
-    if (this.acLikeExt.inited) return;
     this.initStyle();
     this.initView();
-    this.inited = true;
   }
 
   run() {

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf ./dest && tsc && rollup -c",
+    "build": "npm run build:code && npm run cat",
+    "build:code": "rm -rf ./dest && tsc && rollup -c",
     "cat": "cat ./greasyfork.js ./dist/index.js > .dev/script.js"
   },
   "author": "",

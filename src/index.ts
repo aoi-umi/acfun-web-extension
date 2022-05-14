@@ -7,7 +7,7 @@ type ItemType = {
   key: string;
   data: any
 }
-class Main {
+export class AcMainExt {
   constructor() {
     this.init();
   }
@@ -26,19 +26,104 @@ class Main {
       cursor: pointer;
       box-shadow: 1px 1px 5px #888888;
     }
+    
+    .${prefix}menu {
+      position: fixed; top: 100px; right: 10px;
+    }
+    .${prefix}menu > * {
+      margin-bottom: 10px;
+    }
+    .${prefix}menu-item {
+      background: white;
+      border-radius: 50%; border: 1px solid #dcdee2;
+      width: 40px; height: 40px;
+      z-index: 1000;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation:${prefix}show 1s;
+    }
+    .${prefix}hide {
+      display: none;
+    }
+    @keyframes ${prefix}show {
+      from {opacity:0;}
+      to {opacity:1;}
+    }
     `)
   }
 
+  get isLive() {
+    return /live\/[\d]+/.test(location.href)
+  }
+
+  get shouldPause() {
+    return $(`.${prefix}menu-sub-item`).is(`:visible`)
+      // 礼物
+      || $('.container-gifts').hasClass('unfold')
+      // 牌子详情
+      || !$('.medal-panel-wrapper').hasClass('hide');
+  }
   initView() {
+    this.addMenu();
+  }
+  addMenu() {
+    let dom = $(`<div class="${prefix}menu"></div>`);
+    let items: JQuery<HTMLElement>[] = [];
+    // 直播
+    if (this.isLive) {
+      let liveBtn = $(`
+      <svg width="20" viewBox="0 0 70 60">
+        <path d="M0 10 L10 10 L10 0 L30 0 L30 10 L40 10 L40 0 L60 0 L60 10 L70 10 L70 30 L60 30 L60 40 L50 40 L50 50 L40 50 L40 60 L30 60 L30 50 L20 50 L20 40 L10 40 L10 30 L0 30 Z" fill="red" fill-rule="evenodd" />
+      </svg>
+      `)
+      liveBtn.on('click', () => {
+        window.acLiveExt.run();
+        return false;
+      });
+      items.push(liveBtn);
+      AcLiveExt.globalInit();
+    }
+    // 多菜单
+    if (items.length > 1) {
+      let mainMenuItem = $(`
+      <svg viewBox="0 0 100 80" width="20" height="40">
+        <rect width="100" height="20"></rect>
+        <rect y="30" width="100" height="20"></rect>
+        <rect y="60" width="100" height="20"></rect>
+      </svg>
+      `)
+
+      mainMenuItem.on('click', () => {
+        this.toggle($(`.${prefix}menu-sub-item`));
+        return false;
+      });
+      $(document).on('click', () => {
+        this.toggle($(`.${prefix}menu-sub-item`), false);
+      })
+      items.unshift(mainMenuItem);
+    }
+
+    if (items.length) {
+      items = items.map((ele, idx) => {
+        let dom = $('<div></div>');
+        if (idx > 0) {
+          dom.addClass(`${prefix}menu-sub-item`).addClass(`${prefix}hide`)
+        }
+        dom.addClass(`${prefix}menu-item`).append(ele);
+        return dom;
+      })
+      dom.append(items);
+      $('body').append(dom);
+    }
+
   }
 
   init() {
     this.initStyle();
     this.initView();
-    // 直播
-    if (/live\/[\d]+/.test(location.href)) {
-      AcLiveExt.globalInit();
-    }
+
     let that = this;
 
     $(document).on('click', `:not(.${prefix}context-menu)`, function () {
@@ -124,6 +209,15 @@ class Main {
     });
   }
 
+  toggle(dom: JQuery<HTMLElement>, show?: boolean) {
+    let hideCls = `${prefix}hide`;
+    show = show ?? dom.hasClass(hideCls)
+    if (show)
+      dom.removeClass(hideCls)
+    else
+      dom.addClass(hideCls)
+  }
+
   showContextMenu(opt: {
     e: JQuery.ContextMenuEvent,
     avatar?: string
@@ -177,4 +271,4 @@ class Main {
   }
 }
 
-new Main();
+window.acMainExt = new AcMainExt();
