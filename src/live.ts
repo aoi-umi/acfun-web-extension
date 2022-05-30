@@ -1,10 +1,12 @@
 
 import * as config from './config'
+import * as utils from './utils'
 let prefix = `${config.prefix}-live-`;
 let acceptBtnName = `${prefix}accept`;
 let cancelBtnName = `${prefix}cancel`;
 let timeInputName = `${prefix}time`;
 let dialogName = `${prefix}dialog`;
+let emojiName = `${prefix}emoji`;
 let defaultTime = 100;
 let likeBtn = document.querySelector<HTMLButtonElement>('.like-heart');
 export class AcLiveExt {
@@ -12,6 +14,9 @@ export class AcLiveExt {
   acLike: number
   get acLikeExt() {
     return window.acLiveExt
+  }
+  get acMainExt() {
+    return window.acMainExt
   }
   constructor() { }
 
@@ -29,7 +34,7 @@ export class AcLiveExt {
 
   // 样式
   initStyle() {
-    $('style').append(`
+    let style = $('<style></style>').text(`
       .${prefix}menu {
         background: white;
         position: fixed; top: 100px; right: 10px;
@@ -91,11 +96,13 @@ export class AcLiveExt {
         color: #fff;
       }
     `);
+    $('head').append(style)
   }
 
   initView() {
     this.addDialog();
-  };
+    this.addEmoji();
+  }
 
   addDialog() {
     let dialog = $(`
@@ -123,6 +130,26 @@ export class AcLiveExt {
     });
     $('body').append(dialog);
     this.acLikeExt.dialog = dialog
+  }
+
+  async addEmoji() {
+    // 等待加载
+    let face
+    while (true) {
+      await utils.wait(1000)
+      face = $('.face-text')
+      if (face) break;
+    }
+    let that = this
+    face.css({ display: 'flex', 'align-items': 'center' })
+    let emoji = $(`<div class="${emojiName}" style="margin-left: 10px; cursor: pointer;">emoji</div>`)
+    emoji.on('click', function (e) {
+      that.acMainExt.showEmojiMenu({
+        e
+      })
+      return false
+    })
+    face.find('span').after(emoji)
   }
 
   acceptClick() {
@@ -165,5 +192,5 @@ export class AcLiveExt {
       let dialog = this.acLikeExt.dialog;
       this.toggle(dialog, true);
     }
-  };
+  }
 }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Acfun Extension
 // @namespace    https://github.com/aoi-umi
-// @version      0.1
+// @version      0.2
 // @description  acfun插件
 // @author       aoi-umi
 // @match        *.acfun.cn/*

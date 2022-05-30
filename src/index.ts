@@ -8,14 +8,20 @@ type ItemType = {
   key: string;
   data: any
 }
+
+
+let floatMenuName = `${prefix}float-menu`
+let contextMenuName = `${prefix}context-menu`
+let emojiMenuName = `${prefix}emoji-menu`
+let emojiItemName = `${prefix}emoji-item`
 export class AcMainExt {
   constructor() {
     this.init();
   }
 
   initStyle() {
-    $('style').append(`
-    .${prefix}context-menu {
+    let style = $('<style></style>').text(`
+    .${floatMenuName} {
       display: none;
       min-width: 100px;
       min-height: 20px;
@@ -26,6 +32,19 @@ export class AcMainExt {
       padding: 15px 15px;
       cursor: pointer;
       box-shadow: 1px 1px 5px #888888;
+    }
+    .${contextMenuName} {
+      
+    }
+    .${emojiMenuName} {
+      width: 260px;
+      max-height: 100px;
+      overflow-y: auto;
+      font-size: 16px;
+    }
+    .${emojiItemName} {
+      display: inline;
+      margin: 2px;
     }
     
     .${prefix}menu {
@@ -53,6 +72,7 @@ export class AcMainExt {
       to {opacity:1;}
     }
     `)
+    $('head').append(style)
   }
 
   get isLive() {
@@ -124,17 +144,6 @@ export class AcMainExt {
   init() {
     this.initStyle();
     this.initView();
-
-    let that = this;
-
-    $(document).on('click', `:not(.${prefix}context-menu)`, function () {
-      that.getMenu().hide();
-    })
-    $(document).on('click', `.${prefix}context-menu-item`, function (e) {
-      let dom = $(this);
-      let item = dom.data('item');
-      that.handleMenuItem(item);
-    })
 
     this.initAvatar();
     this.initDanmaku();
@@ -242,16 +251,20 @@ export class AcMainExt {
       dom.addClass(hideCls)
   }
 
+  getClickPos(e: JQuery.ContextMenuEvent | JQuery.ClickEvent) {
+    return {
+      x: e.originalEvent.x || 0,
+      y: e.originalEvent.y || 0,
+    }
+  }
+
   showContextMenu(opt: {
     e: JQuery.ContextMenuEvent,
     avatar?: string
     danmaku?: string
   }) {
     let { e, avatar, danmaku } = opt
-    let pos = {
-      x: e.originalEvent.x || 0,
-      y: e.originalEvent.y || 0,
-    }
+    let pos = this.getClickPos(e)
     let list = [];
     if (avatar) {
       list.push({
@@ -271,9 +284,19 @@ export class AcMainExt {
   }
 
   getMenu() {
-    let menu = $(`.${prefix}context-menu`);
+    let that = this
+    let menu = $(`.${contextMenuName}`);
     if (!menu.length) {
-      menu = $(`<div class="${prefix}context-menu"></div>`)
+      $(document).on('click', function () {
+        that.getMenu().hide();
+      })
+
+      $(document).on('click', `.${prefix}context-menu-item`, function (e) {
+        let dom = $(this);
+        let item = dom.data('item');
+        that.handleMenuItem(item);
+      })
+      menu = $(`<div class="${contextMenuName} ${floatMenuName}"></div>`)
       $('body').append(menu)
     }
     return menu;
@@ -303,6 +326,62 @@ export class AcMainExt {
         utils.clipboardCopy(item.data);
         break;
     }
+  }
+
+  getEmojiMenu() {
+    let that = this
+    let menu = $(`.${emojiMenuName}`);
+    if (!menu.length) {
+      menu = $(`<div class="${emojiMenuName} ${floatMenuName}"></div>`)
+      let list = [
+        [128512, 128591]
+      ]
+      let doms = []
+      list.forEach(ele => {
+        for (let i = ele[0]; i <= ele[1]; i++) {
+          let value = `&#${i};`
+          doms.push(`<div class="${emojiItemName}" data-value="${value}">${value}</div>`)
+        }
+      })
+      menu.append(doms.join(''))
+      $('body').append(menu)
+
+      $(document).on('click', function (e) {
+        let dom = $(e.target)
+        if (!dom.is(`.${emojiMenuName}, .${emojiMenuName} *`)) {
+          that.getEmojiMenu().hide();
+        }
+      })
+      let rangeIndex;
+      let input = $('.live-feed-input .danmaku-input');
+      input.on('blur', function (this: HTMLInputElement) {
+        rangeIndex = this.selectionStart;
+      })
+      $(document).on('click', `.${emojiItemName}`, function () {
+        let dom = $(this)
+        let v = dom.data('value')
+        utils.insert({
+          input: input[0] as any,
+          text: v,
+          rangeIndex
+        })
+      })
+    }
+    return menu
+  }
+
+  showEmojiMenu(opt: {
+    e: JQuery.ClickEvent
+  }) {
+    let { e, } = opt
+    let pos = this.getClickPos(e)
+    let menu = this.getEmojiMenu()
+
+    menu
+      .css({
+        left: pos.x + 'px',
+        top: (pos.y - menu.outerHeight() - 10) + 'px',
+      }).show()
   }
 }
 
