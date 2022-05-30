@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Acfun扩展
+// @name         Acfun Extension
 // @namespace    https://github.com/aoi-umi
 // @version      0.1
 // @description  acfun插件

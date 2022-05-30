@@ -1,5 +1,6 @@
 import * as config from './config'
 import { AcLiveExt } from './live';
+import * as utils from './utils'
 
 const prefix = `${config.prefix}-main-`;
 type ItemType = {
@@ -135,7 +136,14 @@ export class AcMainExt {
       that.handleMenuItem(item);
     })
 
-    // 查看头像
+    this.initAvatar();
+    this.initDanmaku();
+  }
+
+  // 查看头像
+  initAvatar() {
+    let that = this
+
     $(document).on('contextmenu', function (e) {
       let dom = $(e.target)
       // console.log(dom)
@@ -209,6 +217,22 @@ export class AcMainExt {
     });
   }
 
+  // 弹幕
+  initDanmaku() {
+    let that = this
+
+    $(document).on('contextmenu', '.comment', function (e) {
+      let dom = $(this).find('.nickname');
+      let danmaku = dom.data('comment')
+      that.showContextMenu({
+        e,
+        danmaku
+      })
+      return false
+    })
+
+  }
+
   toggle(dom: JQuery<HTMLElement>, show?: boolean) {
     let hideCls = `${prefix}hide`;
     show = show ?? dom.hasClass(hideCls)
@@ -221,8 +245,9 @@ export class AcMainExt {
   showContextMenu(opt: {
     e: JQuery.ContextMenuEvent,
     avatar?: string
+    danmaku?: string
   }) {
-    let { e, avatar } = opt
+    let { e, avatar, danmaku } = opt
     let pos = {
       x: e.originalEvent.x || 0,
       y: e.originalEvent.y || 0,
@@ -233,6 +258,13 @@ export class AcMainExt {
         text: '查看头像',
         key: 'openImg',
         data: avatar
+      })
+    }
+    if (danmaku) {
+      list.push({
+        text: '复制弹幕',
+        key: 'copyDanmaku',
+        data: danmaku
       })
     }
     this.createMenu(list, pos);
@@ -266,6 +298,9 @@ export class AcMainExt {
     switch (item.key) {
       case 'openImg':
         window.open(item.data, '__blank');
+        break;
+      case 'copyDanmaku':
+        utils.clipboardCopy(item.data);
         break;
     }
   }
