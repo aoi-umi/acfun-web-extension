@@ -22,4 +22,7 @@ export const insert = (opt: { input: HTMLInputElement | HTMLTextAreaElement, ran
   }
   input.focus();
   input.setSelectionRange(rangeIndex, rangeIndex)
+  let event = document.createEvent("HTMLEvents");
+  event.initEvent("input", !1, !0);
+  input.dispatchEvent(event);
 }

@@ -11,9 +11,12 @@ type ItemType = {
 
 
 let floatMenuName = `${prefix}float-menu`
+let defaultMenuName = `${prefix}default-menu`
 let contextMenuName = `${prefix}context-menu`
 let emojiMenuName = `${prefix}emoji-menu`
+let emojiMenuMainName = `${prefix}emoji-menu-main`
 let emojiItemName = `${prefix}emoji-item`
+let transparentName = `${prefix}tp`
 export class AcMainExt {
   constructor() {
     this.init();
@@ -21,30 +24,39 @@ export class AcMainExt {
 
   initStyle() {
     let style = $('<style></style>').text(`
+    .${transparentName} {
+      background: transparent;
+    }
     .${floatMenuName} {
       display: none;
       min-width: 100px;
       min-height: 20px;
       position: fixed;
-      background: white;
-      border-radius: 5px;
       z-index: 3;
+    }
+    .${defaultMenuName} {
+      background: white;
       padding: 15px 15px;
       cursor: pointer;
+      border-radius: 5px;
       box-shadow: 1px 1px 5px #888888;
     }
     .${contextMenuName} {
-      
     }
     .${emojiMenuName} {
+    }
+    .${emojiMenuMainName} {
       width: 260px;
-      max-height: 100px;
+      max-height: 150px;
       overflow-y: auto;
       font-size: 16px;
     }
     .${emojiItemName} {
-      display: inline;
+      display: inline-block;
       margin: 2px;
+      text-align: center;
+      width: 25px;
+      height: 25px;
     }
     
     .${prefix}menu {
@@ -296,7 +308,7 @@ export class AcMainExt {
         let item = dom.data('item');
         that.handleMenuItem(item);
       })
-      menu = $(`<div class="${contextMenuName} ${floatMenuName}"></div>`)
+      menu = $(`<div class="${contextMenuName} ${floatMenuName} ${defaultMenuName}"></div>`)
       $('body').append(menu)
     }
     return menu;
@@ -332,31 +344,47 @@ export class AcMainExt {
     let that = this
     let menu = $(`.${emojiMenuName}`);
     if (!menu.length) {
-      menu = $(`<div class="${emojiMenuName} ${floatMenuName}"></div>`)
+      menu = $(`<div class="${emojiMenuName} ${floatMenuName} ${transparentName}"></div>`)
+      let main = $(`<div class="${emojiMenuMainName} ${defaultMenuName}"></div>`)
+      menu.append(main)
+      menu.append(`<div class="${transparentName}" style="height: 30px"></div>`)
+      /*
+      emoji
+      http://www.amp-what.com/unicode/search/emoticon
+       */
       let list = [
-        [128512, 128591]
+        [9889, 129313, 129397, 128131],
+        { from: 128512, to: 128591 },
+        // 动物
+        { from: 128045, to: 128060 },
       ]
-      let doms = []
+      let arr = [];
       list.forEach(ele => {
-        for (let i = ele[0]; i <= ele[1]; i++) {
-          let value = `&#${i};`
-          doms.push(`<div class="${emojiItemName}" data-value="${value}">${value}</div>`)
+        if (ele instanceof Array) {
+          arr.push(...ele);
+        } else {
+          for (let i = ele.from; i <= ele.to; i++) {
+            arr.push(i)
+          }
         }
       })
-      menu.append(doms.join(''))
+      let doms = []
+      arr.forEach(i => {
+        let value = typeof i === 'string' ? i : `&#${i};`
+        doms.push(`<div class="${emojiItemName}" data-value="${value}">${value}</div>`)
+      });
+      main.append(doms.join(''))
       $('body').append(menu)
 
-      $(document).on('click', function (e) {
-        let dom = $(e.target)
-        if (!dom.is(`.${emojiMenuName}, .${emojiMenuName} *`)) {
-          that.getEmojiMenu().hide();
-        }
+      $(document).on('mouseleave', `.${emojiMenuName}`, function (e) {
+        that.getEmojiMenu().hide();
       })
       let rangeIndex;
       let input = $('.live-feed-input .danmaku-input');
       input.on('blur', function (this: HTMLInputElement) {
         rangeIndex = this.selectionStart;
       })
+
       $(document).on('click', `.${emojiItemName}`, function () {
         let dom = $(this)
         let v = dom.data('value')
@@ -380,7 +408,7 @@ export class AcMainExt {
     menu
       .css({
         left: pos.x + 'px',
-        top: (pos.y - menu.outerHeight() - 10) + 'px',
+        top: (pos.y - menu.outerHeight() + 10) + 'px',
       }).show()
   }
 }
