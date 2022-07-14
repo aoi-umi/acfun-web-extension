@@ -7,4 +7,5 @@
 // @match        *.acfun.cn/*
 // @grant        none
 // @require https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js
+// @license MIT
 // ==/UserScript==

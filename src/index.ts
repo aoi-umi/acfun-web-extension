@@ -1,7 +1,7 @@
 import * as config from './config'
 import { AcLiveExt } from './live';
 import * as utils from './utils'
-
+const acfunHost = 'https://www.acfun.cn'
 const prefix = `${config.prefix}-main-`;
 type ItemType = {
   text: string
@@ -43,6 +43,9 @@ export class AcMainExt {
     }
     .${contextMenuName} {
     }
+    .${contextMenuName} > * {
+      padding: 5px 0;
+    }
     .${emojiMenuName} {
     }
     .${emojiMenuMainName} {
@@ -53,10 +56,13 @@ export class AcMainExt {
     }
     .${emojiItemName} {
       display: inline-block;
-      margin: 2px;
+      padding: 2px;
       text-align: center;
       width: 25px;
       height: 25px;
+    }
+    .${emojiItemName}:hover {
+      background-color: #f5f5f5;
     }
     
     .${prefix}menu {
@@ -92,7 +98,8 @@ export class AcMainExt {
   }
 
   get shouldPause() {
-    return $(`.${prefix}menu-sub-item`).is(`:visible`)
+    return $(`.${floatMenuName}`).is(`:visible`)
+      || $(`.${prefix}menu-sub-item`).is(`:visible`)
       // 礼物
       || $('.container-gifts').hasClass('unfold')
       // 牌子详情
@@ -290,7 +297,21 @@ export class AcMainExt {
         text: '复制弹幕',
         key: 'copyDanmaku',
         data: danmaku
-      })
+      });
+      if (/^ac[\d]+/.test(danmaku)) {
+        list.push({
+          text: '打开视频',
+          key: 'openAcVideo',
+          data: danmaku
+        });
+      }
+      if (/^http/.test(danmaku)) {
+        list.push({
+          text: '打开链接',
+          key: 'openUrl',
+          data: danmaku
+        });
+      }
     }
     this.createMenu(list, pos);
   }
@@ -330,13 +351,21 @@ export class AcMainExt {
   }
 
   handleMenuItem(item: ItemType) {
+    let url;
     switch (item.key) {
       case 'openImg':
-        window.open(item.data, '__blank');
+      case 'openUrl':
+        url = item.data;
+        break;
+      case 'openAcVideo':
+        url = `${acfunHost}/v/${item.data}`
         break;
       case 'copyDanmaku':
         utils.clipboardCopy(item.data);
         break;
+    }
+    if (url) {
+      window.open(url, '__blank');
     }
   }
 
@@ -353,7 +382,7 @@ export class AcMainExt {
       http://www.amp-what.com/unicode/search/emoticon
        */
       let list = [
-        [9889, 129313, 129397, 128131],
+        [9889, 129313, 129397, 128131, 127863],
         { from: 128512, to: 128591 },
         // 动物
         { from: 128045, to: 128060 },

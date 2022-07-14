@@ -99,7 +99,13 @@ export class AcLiveExt {
     $('head').append(style)
   }
 
-  initView() {
+  async initView() {
+    // 等待加载
+    while (true) {
+      await utils.wait(1000)
+      let face = $('.face-text')
+      if (face) break;
+    }
     this.addDialog();
     this.addEmoji();
   }
@@ -133,13 +139,7 @@ export class AcLiveExt {
   }
 
   async addEmoji() {
-    // 等待加载
-    let face
-    while (true) {
-      await utils.wait(1000)
-      face = $('.face-text')
-      if (face) break;
-    }
+    let face = $('.face-text')
     let that = this
     face.css({ display: 'flex', 'align-items': 'center' })
     let emoji = $(`<div class="${emojiName}" style="margin-left: 10px; cursor: pointer;">emoji</div>`)
